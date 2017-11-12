@@ -24,27 +24,46 @@ battleMenu = ['Attack','Defend','Magic','Item']
 cursor = pygame.image.load('Cursor.png')
 
 
-def createmenu(options,x, y):
-    textFont = pygame.font.Font('ffmenu.ttf', 40)
-    i = 0
-    rectHeights = []
-    rectWidths = []
-    biggestwidth = 0
-    while i <= len(options)-1:
-        textSurface = textFont.render(options[i], True, white, blue)
-        rectHeights.append(textSurface.get_height())
-        rectWidths.append(textSurface.get_width())
-        if textSurface.get_width() > biggestwidth:
-            biggestwidth = textSurface.get_width()
-        i+=1
-    pygame.draw.rect(gameDisplay, blue, (x-80, y-11, 89+biggestwidth, sum(rectHeights)+2*len(options)+20))
-    pygame.draw.rect(gameDisplay, gray, (x-80, y-11, 89+biggestwidth, sum(rectHeights)+2*len(options)+20), 9)
-    i = 0
-    while i <= len(options)-1:
-        textSurface = textFont.render(options[i], True, white, blue)
-        gameDisplay.blit(textSurface, (x,y))
-        y = y + rectHeights[i] + 2
-        i+=1
+
+
+
+class menu:
+
+    def __init__(self, options, z, w):
+        self.eixo_x = z
+        self.eixo_y = w
+        self.menutext = options
+        self.pointer = 0
+    def createmenu(self):
+        self.textFont = pygame.font.Font('ffmenu.ttf', 40)
+        self.x_backup = self.eixo_x
+        self.y_backup = self.eixo_y
+        self.i = 0
+        self.rectHeights = []
+        self.rectWidths = []
+        self.biggestwidth = 0
+        self.optCoordinates = []
+        for each in self.menutext:
+            self.textSurface = self.textFont.render(each, True, white, blue)
+            self.rectHeights.append(self.textSurface.get_height())
+            self.rectWidths.append(self.textSurface.get_width())
+            if self.textSurface.get_width() > self.biggestwidth:
+                self.biggestwidth = self.textSurface.get_width()
+            self.i+=1
+        pygame.draw.rect(gameDisplay, blue, (self.eixo_x-80, self.eixo_y-11, 89+self.biggestwidth, sum(self.rectHeights)+2*len(self.menutext)+20))
+        pygame.draw.rect(gameDisplay, gray, (self.eixo_x-80, self.eixo_y-11, 89+self.biggestwidth, sum(self.rectHeights)+2*len(self.menutext)+20), 9)
+        self.i = 0
+        while self.i <= len(self.menutext)-1:
+            self.textSurface = self.textFont.render(self.menutext[self.i], True, white, blue)
+            gameDisplay.blit(self.textSurface, (self.eixo_x,self.y_backup))
+            self.optCoordinates.append([self.eixo_x - 40, self.y_backup])
+            self.y_backup = self.y_backup + self.rectHeights[self.i] + 2
+            self.i+=1
+
+    def menucursor(self):
+        gameDisplay.blit(cursor, self.optCoordinates[self.pointer])
+
+battmenu = menu(battleMenu, 100,420)
 
 
 def game_loop():
@@ -59,6 +78,12 @@ def game_loop():
 
                 pygame.quit()
                 quit()
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_DOWN and battmenu.pointer < len(battmenu.optCoordinates)-1:
+                    battmenu.pointer += 1
+
+                if event.key == pygame.K_UP and battmenu.pointer > 0:
+                    battmenu.pointer -= 1
 
         gameDisplay.blit(bg1, (x, 0))
         gameDisplay.blit(bg2, (x-display_width, 0))
@@ -66,10 +91,11 @@ def game_loop():
         pygame.draw.rect(gameDisplay, blue, (0,400, display_width, display_height))
         pygame.draw.line(gameDisplay, gray, (0,400),(800,400), 9)
         pygame.draw.line(gameDisplay, gray, (250,400),(250,600), 9)
-        createmenu(battleMenu,100, 420)
+        battmenu.createmenu()
+        battmenu.menucursor()
 
 
-        pygame.display.flip()
+        pygame.display.update()
         x+=10
         if x >= display_width:
             x = 0
