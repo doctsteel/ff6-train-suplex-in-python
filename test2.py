@@ -60,9 +60,6 @@ def game_loop():
                 pygame.quit()
                 quit()
 
-
-
-
         gameDisplay.blit(bg1, (x, 0))
         gameDisplay.blit(bg2, (x-display_width, 0))
 
