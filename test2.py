@@ -1,6 +1,7 @@
 import pygame
 import time
 import spritesheet
+import random
 
 pygame.init()
 
@@ -12,41 +13,51 @@ white = (255,255,255)
 red = (255,0,0)
 blue = (0,0,200)
 gray = (200, 200, 200)
-
+transparentbg = (0, 64, 128)
+pink = (255, 0, 255)
 gameDisplay = pygame.display.set_mode((display_width,display_height))
 pygame.display.set_caption('test')
 clock = pygame.time.Clock()
 WALKANIMATION = pygame.USEREVENT+1
 pygame.time.set_timer(WALKANIMATION, 100)
 
-bg1 = pygame.image.load('background.png').convert()
-bg2 = pygame.image.load('background.png').convert()
-class charactersprite:
-    def __init__(self, name, filename):
+bg1 = pygame.image.load('betterbg.png').convert()
+bg2 = pygame.image.load('betterbg.png').convert()
+fg1 = pygame.image.load('foreground.png').convert()
+fg2 = pygame.image.load('foreground.png').convert()
+fg1.set_colorkey(transparentbg)
+fg2.set_colorkey(transparentbg)
+
+class character:
+    def __init__(self, name, filename, attack, defense, speed, hp):
         self.name = name
         self.spritelist = []
         sheet = spritesheet.spritesheet(filename)
         self.spritelist = sheet.load_strip((0,0,96,96), 13, colorkey=(255, 255, 255))
         self.walkanim = [2,0,1,0]
         self.a = 0
+        self.atk = attack
+        self.defe = defense
+        self.spd = speed
+        self.hp = hp
     def walk(self):
         if self.a == 3:
             self.a = 0
         else:
             self.a += 1
-
         return self.a
+class enemy:
+    def __init
 
 
 
-sabin = charactersprite('sabin', 'sabin_sprite.png')
 
-
-
-sabin_sprites = spritesheet.spritesheet('sabin_sprite.png')
-sabin_idle = sabin_sprites.image_at((0,0,96, 96))
-
-battleMenu = ['Attack','Defend','Magic','Item']
+shadow = character('shadow', 'shadow_sprite.png', 39, 47, 38)
+sabin = character('sabin', 'sabin_sprite.png', 47, 53, 37)
+cyan = character('cyan', 'cyan_sprite.png', 40, 48, 28)
+boss = pygame.image.load('train.png').convert()
+boss.set_colorkey(pink)
+battleMenu = ['Attack','Defend','Magic','Item',]
 
 cursor = pygame.image.load('Cursor.png')
 
@@ -91,40 +102,50 @@ class menu:
 battmenu = menu(battleMenu, 100,420)
 
 
+def draw_screen(x, x2):
+    gameDisplay.blit(bg1, (x, 0))
+    gameDisplay.blit(bg2, (x-1474, 0))
+    gameDisplay.blit(sabin.spritelist[sabin.walkanim[sabin.a]], (130, 200))
+    gameDisplay.blit(shadow.spritelist[shadow.walkanim[shadow.a]], (43, 240))
+    gameDisplay.blit(cyan.spritelist[cyan.walkanim[cyan.a]], (210, 150))
+    gameDisplay.blit(boss,(display_width - 327, display_height - 600))
+    gameDisplay.blit(fg1, (x2, 0))
+    gameDisplay.blit(fg2, (x2 - 2511, 0))
+    pygame.draw.rect(gameDisplay, blue, (0,400, display_width, display_height))
+    pygame.draw.line(gameDisplay, gray, (0,400),(800,400), 9)
+    pygame.draw.line(gameDisplay, gray, (250,400),(250,600), 9)
+
+
 def game_loop():
     gameExit = False
     x = 0
-
+    x2 = 0
     while not gameExit:
-        gameDisplay.blit(bg1, (x, 0))
-        gameDisplay.blit(bg2, (x-display_width, 0))
-
-        pygame.draw.rect(gameDisplay, blue, (0,400, display_width, display_height))
-        pygame.draw.line(gameDisplay, gray, (0,400),(800,400), 9)
-        pygame.draw.line(gameDisplay, gray, (250,400),(250,600), 9)
+        draw_screen(x, x2)
         battmenu.createmenu()
         battmenu.menucursor()
-        gameDisplay.blit(sabin.spritelist[sabin.walkanim[sabin.a]], (300, 230))
-
         pygame.display.update()
-        x+=10
-        if x >= display_width:
+        x += 10
+        x2 += 8
+        if x >= 1474:
             x = 0
-
+        if x2 >= 2511:
+            x2 = 0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-
                 pygame.quit()
                 quit()
             if event.type == WALKANIMATION:
                 sabin.walk()
+                shadow.walk()
+                cyan.walk()
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_DOWN and battmenu.pointer < len(battmenu.optCoordinates)-1:
                     battmenu.pointer += 1
 
                 if event.key == pygame.K_UP and battmenu.pointer > 0:
                     battmenu.pointer -= 1
-
+                if event.key == pygame.K_a:
 
         clock.tick(60)
 
