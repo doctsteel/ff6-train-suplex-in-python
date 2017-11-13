@@ -18,6 +18,8 @@ pink = (255, 0, 255)
 gameDisplay = pygame.display.set_mode((display_width,display_height))
 pygame.display.set_caption('test')
 clock = pygame.time.Clock()
+ATBCOUNTER = pygame.USEREVENT+2
+pygame.time.set_timer(ATBCOUNTER, 33)
 WALKANIMATION = pygame.USEREVENT+1
 pygame.time.set_timer(WALKANIMATION, 100)
 
@@ -27,10 +29,12 @@ fg1 = pygame.image.load('foreground.png').convert()
 fg2 = pygame.image.load('foreground.png').convert()
 fg1.set_colorkey(transparentbg)
 fg2.set_colorkey(transparentbg)
+atbfont = pygame.font.Font('ffmenu.ttf', 45)
 
 class character:
-    def __init__(self, name, filename, attack, defense, speed, hp):
+    def __init__(self, name,commandname, filename, level,  attack, defense, speed, maxhp, evasion, power):
         self.name = name
+        self.commandname = commandname
         self.spritelist = []
         sheet = spritesheet.spritesheet(filename)
         self.spritelist = sheet.load_strip((0,0,96,96), 13, colorkey=(255, 255, 255))
@@ -39,30 +43,77 @@ class character:
         self.atk = attack
         self.defe = defense
         self.spd = speed
-        self.hp = hp
+        self.maxhp = maxhp
+        self.curhp = maxhp
+        self.evasion = evasion
+        self.level = level
+        self.power = power
+        self.atbspeed = 0
     def walk(self):
         if self.a == 3:
             self.a = 0
         else:
             self.a += 1
         return self.a
+    def atb_formula(self):
+        self.atbspeed = (96 * (spd + 20))/16
+        return self.atbspeed
+
+
+def draw_atb_bar(characterparty, x, y):
+    for each in characterparty:
+        nameSurface = atbfont.render(each.name, True, white, blue)
+        hpSurface = atbfont.render(str(each.curhp), True, white, blue)
+        nameHeight = nameSurface.get_height()
+        gameDisplay.blit(nameSurface,(x,y))
+        gameDisplay.blit(hpSurface,(800-(140+hpSurface.get_width()),y))
+        pygame.draw.rect(gameDisplay, gray, (display_width - 140, y+14, 130, 10),3)
+        y += nameHeight
+
+
+
 class enemy:
-    def __init
+    def __init__(self, sprite, attack, defense, speed, hp):
+        self.atk = attack
+        self.defe = defense
+        self.spd = speed
+        self.hp = hp
+        self.image = pygame.image.load(sprite).convert()
+        self.atbspeed = 0
+    def atb_formula(self):
+        self.atbspeed = ((96 *(spd +20))*(255-(1*24)))/16
+        return self.atbspeed
+
+
+def damageformula(str, atk, defe):
+    crit = False
+    notcrit = 31/32
+    if random.randint(1,33) == 32:
+         crit = True
+    if not crit:
+        damage = (str*2 + atk)
+    else:
+        damage = (str*2 + atk)*2
+    variance = random.randint(224, 255)
+    damage = ((damage * variance)/256)+1
+    damage = (damage *(255 - defe)/256)+1
+    return damage
 
 
 
 
-shadow = character('shadow', 'shadow_sprite.png', 39, 47, 38)
-sabin = character('sabin', 'sabin_sprite.png', 47, 53, 37)
-cyan = character('cyan', 'cyan_sprite.png', 40, 48, 28)
-boss = pygame.image.load('train.png').convert()
-boss.set_colorkey(pink)
-battleMenu = ['Attack','Defend','Magic','Item',]
+shadow = character('Shadow','Ninjutsu', 'shadow_sprite.png',11, 39, 124, 40, 252, 0.28, 105)
+sabin = character('Sabin','Blitz', 'sabin_sprite.png',12, 47, 117, 37, 289, 0.12, 81)
+cyan = character('Cyan','Bushido', 'cyan_sprite.png',13, 40, 123, 28, 358, 0.06, 82)
+boss = enemy('train.png', 10, 30, 30, 1900)
+boss.image.set_colorkey(pink)
+
+battleMenu = ['Attack','Defend','     ','Item']
 
 cursor = pygame.image.load('Cursor.png')
 
 
-
+party = [shadow, sabin, cyan]
 
 class menu:
     def __init__(self, options, z, w):
@@ -108,7 +159,7 @@ def draw_screen(x, x2):
     gameDisplay.blit(sabin.spritelist[sabin.walkanim[sabin.a]], (130, 200))
     gameDisplay.blit(shadow.spritelist[shadow.walkanim[shadow.a]], (43, 240))
     gameDisplay.blit(cyan.spritelist[cyan.walkanim[cyan.a]], (210, 150))
-    gameDisplay.blit(boss,(display_width - 327, display_height - 600))
+    gameDisplay.blit(boss.image, (display_width - 327, display_height - 600))
     gameDisplay.blit(fg1, (x2, 0))
     gameDisplay.blit(fg2, (x2 - 2511, 0))
     pygame.draw.rect(gameDisplay, blue, (0,400, display_width, display_height))
@@ -122,6 +173,8 @@ def game_loop():
     x2 = 0
     while not gameExit:
         draw_screen(x, x2)
+        draw_atb_bar(party, 300, 420)
+
         battmenu.createmenu()
         battmenu.menucursor()
         pygame.display.update()
@@ -145,7 +198,6 @@ def game_loop():
 
                 if event.key == pygame.K_UP and battmenu.pointer > 0:
                     battmenu.pointer -= 1
-                if event.key == pygame.K_a:
 
         clock.tick(60)
 
